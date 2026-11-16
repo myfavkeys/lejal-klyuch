@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>лежал ключ</title>
+
+<style>
+:root {
+  --bg: #fff;
+  --text: #171717;
+  --muted: #888;
+  --yellow: #f4cf35;
+}
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+body {
+  overflow-x: hidden;
+  transition: background .3s, color .3s;
+}
+body.dark {
+  --bg: #111;
+  --text: #f5f5f5;
+  --muted: #888;
+  --yellow: #f4cf35;
+}
+
+header {
+  min-height: 76px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(128,128,128,.18);
+  position: relative;
+  z-index: 20;
+}
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.logo {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.key-slot {
+  width: 38px;
+  height: 27px;
+  border: 1.5px solid var(--yellow);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .3s;
+}
+.key-slot::before {
+  content: "🗝️";
+  font-size: 17px;
+  opacity: .65;
+  transform: rotate(-35deg);
+}
+.key-slot.active {
+  transform: scale(1.2);
+  box-shadow: 0 0 20px rgba(244,207,53,.65);
+  background: rgba(244,207,53,.12);
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+nav button {
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  opacity: .6;
+  transition: .2s;
+  padding: 8px 0;
+}
+nav button:hover,
+nav button.active { opacity: 1; }
+
+.theme-toggle {
+  position: fixed;
+  z-index: 50;
+  top: 18px;
+  right: 18px;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+main {
+  position: relative;
+  min-height: calc(100vh - 76px);
+  min-height: calc(100dvh - 76px);
+}
+.page {
+  display: none;
+  min-height: calc(100vh - 76px);
+  min-height: calc(100dvh - 76px);
+}
+.page.active { display: block; }
+
+/* ГЛАВНАЯ */
+
+#home {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 76px);
+  height: calc(100dvh - 76px);
+  min-height: 420px;
+}
+#home.active { display: flex; }
+
+h1 {
+  font-size: clamp(42px, 8vw, 90px);
+  letter-spacing: -5px;
+  margin: 0 0 42px;
+  font-weight: 900;
+  position: relative;
+  z-index: 2;
+}
+.summon-button {
+  position: relative;
+  z-index: 5;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 1px solid rgba(220,180,30,.5);
+  background: var(--yellow);
+  color: #171717;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  animation: buttonGlow 2.5s infinite;
+  transition: transform .2s, box-shadow .2s;
+}
+.summon-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 35px rgba(244,207,53,.5);
+}
+.summon-button:active { transform: scale(.9); }
+.summon-button span {
+  font-size: 37px;
+  line-height: 1;
+  display: block;
+  transform: rotate(-35deg);
+}
+.button-label {
+  margin-top: 17px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  font-weight: 800;
+  opacity: .7;
+  position: relative;
+  z-index: 2;
+}
+@keyframes buttonGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244,207,53,.25); }
+  50% { box-shadow: 0 0 0 15px rgba(244,207,53,0); }
+}
+
+.letter {
+  display: inline-block;
+  position: relative;
+  will-change: transform;
+}
+
+/* ИГРОВАЯ ОБЛАСТЬ */
+
+#keyLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 3;
+}
+.flying-key {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  line-height: 1;
+  will-change: transform, opacity;
+  transform-origin: center;
+}
+.flying-key:active { cursor: grabbing; }
+
+/* БЫСТРЫЕ НАЖАТИЯ */
+
+.bara-label {
+  position: fixed;
+  top: 50%;
+  z-index: 30;
+  font-size: clamp(24px, 5vw, 48px);
+  font-weight: 900;
+  letter-spacing: -2px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(.7);
+  transition: opacity .25s, transform .35s;
+  white-space: nowrap;
+}
+.bara-label.left { left: 5%; }
+.bara-label.right { right: 5%; }
+.bara-label.show {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+.shake { animation: shake .45s ease-in-out; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-9px) rotate(-5deg); }
+  40% { transform: translateX(9px) rotate(5deg); }
+  60% { transform: translateX(-7px) rotate(-4deg); }
+  80% { transform: translateX(7px) rotate(4deg); }
+}
+
+/* ТИТРЫ */
+
+#authors { position: relative; overflow: hidden; }
+.credits-window {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.credits-window.dragging { cursor: grabbing; }
+.credits-track {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 0;
+  text-align: center;
+  padding: 100px 20px;
+  will-change: transform;
+  pointer-events: none;
+}
+.credit-item { margin: 0 auto 75px; }
+.credit-role {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.credit-name {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+.credit-name.highlight { color: var(--yellow); }
+
+/* МЕДИА */
+
+#mediaPage {
+  display: none;
+  padding: 55px 6% 75px;
+}
+#mediaPage.active { display: block; }
+
+.media-container {
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.media-heading {
+  font-size: clamp(32px, 6vw, 54px);
+  font-weight: 900;
+  letter-spacing: -3px;
+  text-align: center;
+  margin: 0 0 45px;
+}
+
+.media-section {
+  margin-bottom: 48px;
+}
+
+.media-section-title {
+  font-size: clamp(20px, 3vw, 27px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin: 0 0 17px;
+}
+
+.media-card {
+  border: 1px solid rgba(128,128,128,.2);
+  border-radius: 17px;
+  padding: 13px;
+  background: rgba(128,128,128,.035);
+  box-shadow: 0 12px 40px rgba(0,0,0,.07);
+  transition: border-color .25s, transform .25s;
+}
+.media-card:hover {
+  border-color: rgba(244,207,53,.65);
+  transform: translateY(-2px);
+}
+
+.media-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #080808;
+}
+.media-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.media-description {
+  padding: 15px 5px 3px;
+}
+.media-name {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.media-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ЭКРАН ПОИМКИ И ФЕЙЕРВЕРКИ */
+
+#catchOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  padding: 20px;
+  overflow: hidden;
+}
+#catchOverlay.show {
+  animation: catchScreen 2.8s ease forwards;
+}
+.catch-title {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  font-size: clamp(25px, 8vw, 82px);
+  line-height: 1.15;
+  font-weight: 1000;
+  letter-spacing: clamp(-2px, -.3vw, -1px);
+  padding: 0 5px;
+  position: relative;
+  z-index: 2;
+  animation: catchText .5s cubic-bezier(.2,1.3,.4,1) both;
+}
+@keyframes catchScreen {
+  0% { opacity: 0; visibility: visible; }
+  12%, 75% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+@keyframes catchText {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+#fireworksLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.firework-particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--particle-size, 5px);
+  height: var(--particle-size, 5px);
+  border-radius: 50%;
+  background: var(--particle-color, #f4cf35);
+  box-shadow: 0 0 9px var(--particle-color, #f4cf35);
+  opacity: 0;
+  animation: fireworkBurst var(--particle-duration, 1.4s) cubic-bezier(.12,.6,.3,1) forwards;
+}
+@keyframes fireworkBurst {
+  0% { opacity: 1; transform: translate(0, 0) scale(.5); }
+  65% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(var(--particle-x), var(--particle-y)) scale(.05);
+  }
+}
+
+@media (max-width: 600px) {
+  header { padding: 0 18px; }
+  nav { gap: 12px; margin-right: 35px; }
+  nav button { font-size: 11px; }
+  h1 { letter-spacing: -3px; }
+  .bara-label.left { left: 3%; }
+  .bara-label.right { right: 3%; }
+  #mediaPage { padding: 35px 18px 55px; }
+  .media-heading { margin-bottom: 32px; }
+  .media-section { margin-bottom: 35px; }
+  .media-card { padding: 9px; border-radius: 13px; }
+}
+@media (max-width: 380px) {
+  nav { gap: 8px; }
+  nav button { font-size: 10px; }
+  .logo { font-size: 18px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo">лежал ключ.</div>
+    <div class="key-slot" id="keySlot"></div>
+  </div>
+
+  <nav>
+    <button class="active" id="homeTab">Главная</button>
+    <button id="authorsTab">Авторы</button>
+    <button id="mediaTab">Медиа</button>
+  </nav>
+</header>
+
+<button class="theme-toggle" id="themeToggle">🌙</button>
+
+<main>
+  <section class="page active" id="home">
+    <h1 id="mainTitle">лежал ключ</h1>
+    <button class="summon-button" id="summonButton" aria-label="лежал ключ">
+      <span>🗝️</span>
+    </button>
+    <div class="button-label" id="buttonLabel">лежал ключ</div>
+    <div id="keyLayer"></div>
+  </section>
+
+  <section class="page" id="authors">
+    <div class="credits-window" id="creditsWindow">
+      <div class="credits-track" id="creditsTrack">
+        <div id="creditsContent"></div>
+        <div id="creditsClone"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="mediaPage">
+    <div class="media-container">
+      <h2 class="media-heading">медиа</h2>
+
+      <div class="media-section">
+        <h3 class="media-section-title">видео</h3>
+
+        <div class="media-card">
+          <div class="media-frame">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/UD9egi-hIe0"
+              title="Видео"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen>
+            </iframe>
+          </div>
+          <div class="media-description">
+            <div class="media-name">видео</div>
+            <div class="media-subtitle">лежал ключ.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="media-section">
+        <h3 class="media-section-title">музыка</h3>
+
+        <div class="media-card">
+          <div class="media-frame">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/MF_cYq4EixU"
+              title="А4 — KIDS (Official Audio)"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen>
+            </iframe>
+          </div>
+          <div class="media-description">
+            <div class="media-name">А4 — KIDS</div>
+            <div class="media-subtitle">Влад А4, Глент, Кобяков · Official Audio</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<div class="bara-label left" id="baraLeft">БАРАНЫ</div>
+<div class="bara-label right" id="baraRight">ВПН 👑🐏</div>
+
+<div id="catchOverlay">
+  <div id="fireworksLayer"></div>
+  <div class="catch-title">лежал ключ</div>
+</div>
+
+<script>
+const home = document.getElementById('home');
+const authors = document.getElementById('authors');
+const mediaPage = document.getElementById('mediaPage');
+
+const homeTab = document.getElementById('homeTab');
+const authorsTab = document.getElementById('authorsTab');
+const mediaTab = document.getElementById('mediaTab');
+
+const themeToggle = document.getElementById('themeToggle');
+const summonButton = document.getElementById('summonButton');
+const keyLayer = document.getElementById('keyLayer');
+const keySlot = document.getElementById('keySlot');
+const catchOverlay = document.getElementById('catchOverlay');
+const fireworksLayer = document.getElementById('fireworksLayer');
+
+let darkMode = false;
+let keys = [];
+let animationRunning = false;
+let tapTimes = [];
+let baraTimeout;
+let physicsActive = false;
+let lastFrameTime = 0;
+
+const MAX_KEYS = 55;
+const SPAWN_COUNT = 45;
+
+/* НАВИГАЦИЯ */
+
+function showPage(page) {
+  [home, authors, mediaPage].forEach(p => p.classList.remove('active'));
+  [homeTab, authorsTab, mediaTab].forEach(t => t.classList.remove('active'));
+
+  if (page === 'home') {
+    home.classList.add('active');
+    homeTab.classList.add('active');
+  } else if (page === 'authors') {
+    authors.classList.add('active');
+    authorsTab.classList.add('active');
+  } else {
+    mediaPage.classList.add('active');
+    mediaTab.classList.add('active');
+  }
+}
+
+homeTab.addEventListener('click', () => showPage('home'));
+authorsTab.addEventListener('click', () => showPage('authors'));
+mediaTab.addEventListener('click', () => showPage('media'));
+
+/* ТЕМА */
+
+themeToggle.addEventListener('click', () => {
+  darkMode = !darkMode;
+  document.body.classList.toggle('dark', darkMode);
+  themeToggle.textContent = darkMode ? '☀️' : '🌙';
+});
+
+/* РАЗБИЕНИЕ ТЕКСТА НА БУКВЫ */
+
+const letterBodies = [];
+
+function splitIntoLetters(element) {
+  const text = element.textContent;
+  element.textContent = '';
+
+  [...text].forEach(char => {
+    const span = document.createElement('span');
+    span.className = 'letter';
+    span.textContent = char === ' ' ? '\u00A0' : char;
+    element.appendChild(span);
+
+    letterBodies.push({
+      element: span,
+      x: 0, y: 0,
+      vx: 0, vy: 0,
+      rotation: 0,
+      spin: 0,
+      hitUntil: 0,
+      returning: false
+    });
+  });
+}
+
+splitIntoLetters(document.getElementById('mainTitle'));
+splitIntoLetters(document.getElementById('buttonLabel'));
+
+/* СОЗДАНИЕ КЛЮЧЕЙ */
+
+summonButton.addEventListener('click', () => {
+  spawnKeys();
+  registerTap();
+});
+
+function getBounds() {
+  return {
+    width: keyLayer.clientWidth,
+    height: keyLayer.clientHeight,
+    size: 42
+  };
+}
+
+function randomSpawnPosition(width) {
+  const clusters = [
+    width * (.12 + Math.random() * .2),
+    width * (.4 + Math.random() * .2),
+    width * (.68 + Math.random() * .2)
+  ];
+
+  const center = clusters[Math.floor(Math.random() * clusters.length)];
+  let x;
+
+  if (Math.random() < .72) {
+    x = center + (Math.random() + Math.random() - 1) * width * .28;
+  } else {
+    x = Math.random() * width;
+  }
+
+  return Math.max(0, Math.min(width - 42, x));
+}
+
+/* УДАЛЕНИЕ СТАРЫХ КЛЮЧЕЙ ПРИ ПЕРЕПОЛНЕНИИ */
+
+function removeKey(key) {
+  if (!key) return;
+  key.element.remove();
+  keys = keys.filter(item => item !== key);
+}
+
+function makeRoomForKeys(amount) {
+  const excess = keys.length + amount - MAX_KEYS;
+  if (excess <= 0) return;
+
+  const removable = keys
+    .filter(key => !key.dragging)
+    .sort((a, b) => a.createdAt - b.createdAt);
+
+  let removed = 0;
+
+  for (const key of removable) {
+    if (removed >= excess) break;
+    removeKey(key);
+    removed++;
+  }
+}
+
+function spawnKeys() {
+  if (animationRunning) return;
+
+  animationRunning = true;
+  makeRoomForKeys(SPAWN_COUNT);
+
+  const bounds = getBounds();
+
+  for (let i = 0; i < SPAWN_COUNT; i++) {
+    if (keys.length >= MAX_KEYS) break;
+
+    const element = document.createElement('div');
+    element.className = 'flying-key';
+    element.textContent = '🗝️';
+
+    const x = randomSpawnPosition(bounds.width);
+    const y = -Math.random() * Math.min(350, bounds.height * .6) - 45;
+    const rotation = Math.random() * 360;
+
+    element.style.transform =
+      `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
+
+    keyLayer.appendChild(element);
+
+    const key = {
+      element,
+      x, y,
+      vx: (Math.random() - .5) * 10,
+      vy: Math.random() * 3,
+      rotation,
+      spin: (Math.random() - .5) * 9,
+      targetRotation: 0,
+      grounded: false,
+      settled: false,
+      dragging: false,
+      userControlled: false,
+      createdAt: performance.now(),
+      settledTime: 0,
+      opacity: 1,
+      pointerVelocityX: 0,
+      pointerVelocityY: 0,
+      previousPointerX: 0,
+      previousPointerY: 0,
+      hitLetters: new Set()
+    };
+
+    keys.push(key);
+    enableDrag(key);
+  }
+
+  if (!physicsActive) {
+    physicsActive = true;
+    lastFrameTime = performance.now();
+    requestAnimationFrame(updatePhysics);
+  }
+
+  setTimeout(() => {
+    animationRunning = false;
+  }, 500);
+}
+
+/* ФИЗИКА */
+
+function updatePhysics(now) {
+  const bounds = getBounds();
+  const width = bounds.width;
+  const height = bounds.height;
+  const size = bounds.size;
+
+  const dt = Math.min((now - lastFrameTime) / 16.67, 2);
+  lastFrameTime = now;
+
+  keys = keys.filter(key => key.element.isConnected);
+
+  for (const key of keys) {
+    if (key.dragging) continue;
+
+    if (!key.settled) {
+      key.vy += .22 * dt;
+      key.x += key.vx * dt;
+      key.y += key.vy * dt;
+      key.rotation += key.spin * dt;
+
+      key.vx *= Math.pow(.995, dt);
+      key.spin *= Math.pow(.995, dt);
+
+      if (key.x < 0) {
+        key.x = 0;
+        key.vx = Math.abs(key.vx) * .75;
+      }
+
+      if (key.x > width - size) {
+        key.x = width - size;
+        key.vx = -Math.abs(key.vx) * .75;
+      }
+
+      if (key.y < 0) {
+        key.y = 0;
+        key.vy = Math.abs(key.vy) * .65;
+      }
+
+      if (key.y > height - size) {
+        key.y = height - size;
+        key.vy = -Math.abs(key.vy) * .38;
+        key.vx *= .85;
+        key.spin *= .7;
+
+        if (Math.abs(key.vy) < .8) {
+          key.vy = 0;
+          key.grounded = true;
+        }
+      }
+
+      if (
+        key.grounded &&
+        Math.abs(key.vx) < .15 &&
+        Math.abs(key.vy) < .8
+      ) {
+        key.vx = 0;
+        key.vy = 0;
+        key.spin = 0;
+        key.settled = true;
+        key.settledTime = 0;
+      }
+    } else {
+      key.settledTime += dt / 60;
+    }
+
+    drawKey(key);
+  }
+
+  resolveKeyCollisions();
+  resolveLetterCollisions(now);
+  updateLetters(dt, now);
+  updateKeyDisappearance(dt);
+
+  if (
+    keys.length > 0 ||
+    letterBodies.some(letter =>
+      Math.abs(letter.x) > .1 ||
+      Math.abs(letter.y) > .1 ||
+      Math.abs(letter.vx) > .1 ||
+      Math.abs(letter.vy) > .1 ||
+      Math.abs(letter.rotation) > .1
+    )
+  ) {
+    requestAnimationFrame(updatePhysics);
+  } else {
+    physicsActive = false;
+  }
+}
+
+function drawKey(key) {
+  key.element.style.transform =
+    `translate(${key.x}px, ${key.y}px) rotate(${key.rotation}deg)`;
+}
+
+/* СТОЛКНОВЕНИЯ КЛЮЧЕЙ */
+
+function resolveKeyCollisions() {
+  const minDistance = 35;
+
+  for (let i = 0; i < keys.length; i++) {
+    const a = keys[i];
+    if (a.dragging || a.settled) continue;
+
+    for (let j = i + 1; j < keys.length; j++) {
+      const b = keys[j];
+      if (b.dragging || b.settled) continue;
+
+      const dx = (b.x + 21) - (a.x + 21);
+      const dy = (b.y + 21) - (a.y + 21);
+      const distance = Math.hypot(dx, dy);
+
+      if (distance === 0 || distance >= minDistance) continue;
+
+      const nx = dx / distance;
+      const ny = dy / distance;
+      const overlap = minDistance - distance;
+
+      a.x -= nx * overlap * .5;
+      a.y -= ny * overlap * .5;
+      b.x += nx * overlap * .5;
+      b.y += ny * overlap * .5;
+
+      const relativeVX = b.vx - a.vx;
+      const relativeVY = b.vy - a.vy;
+      const velocityAlongNormal = relativeVX * nx + relativeVY * ny;
+
+      if (velocityAlongNormal < 0) {
+        const impulse = velocityAlongNormal * .7;
+        a.vx += impulse * nx;
+        a.vy += impulse * ny;
+        b.vx -= impulse * nx;
+        b.vy -= impulse * ny;
+      }
+
+      if (Math.abs(velocityAlongNormal) > .2) {
+        a.grounded = false;
+        b.grounded = false;
+      }
+
+      const bounds = getBounds();
+
+      a.x = Math.max(0, Math.min(bounds.width - 42, a.x));
+      b.x = Math.max(0, Math.min(bounds.width - 42, b.x));
+      a.y = Math.max(0, Math.min(bounds.height - 42, a.y));
+      b.y = Math.max(0, Math.min(bounds.height - 42, b.y));
+    }
+  }
+}
+
+/* СТОЛКНОВЕНИЯ С БУКВАМИ */
+
+function resolveLetterCollisions(now) {
+  const homeRect = home.getBoundingClientRect();
+
+  for (const key of keys) {
+    if (!key.userControlled) continue;
+
+    const keyRect = {
+      left: key.x + 5,
+      right: key.x + 37,
+      top: key.y + 5,
+      bottom: key.y + 37
+    };
+
+    for (const letter of letterBodies) {
+      const rect = letter.element.getBoundingClientRect();
+
+      const left = rect.left - homeRect.left;
+      const right = rect.right - homeRect.left;
+      const top = rect.top - homeRect.top;
+      const bottom = rect.bottom - homeRect.top;
+
+      const overlap =
+        keyRect.right > left &&
+        keyRect.left < right &&
+        keyRect.bottom > top &&
+        keyRect.top < bottom;
+
+      if (!overlap) {
+        key.hitLetters.delete(letter);
+        continue;
+      }
+
+      if (key.hitLetters.has(letter)) continue;
+
+      const speedX = key.dragging ? key.pointerVelocityX : key.vx;
+      const speedY = key.dragging ? key.pointerVelocityY : key.vy;
+      const speed = Math.hypot(speedX, speedY);
+
+      if (speed < .7) continue;
+
+      key.hitLetters.add(letter);
+
+      const dirX = speedX / speed;
+      const dirY = speedY / speed;
+      const impact = Math.min(speed, 18);
+
+      letter.vx += dirX * impact * .12;
+      letter.vy += dirY * impact * .12;
+
+      const keyCenterX = key.x + 21;
+      const letterCenterX = (left + right) / 2;
+      const side = keyCenterX - letterCenterX;
+
+      letter.spin += Math.sign(side || dirX) * Math.min(impact * .025, .45);
+      letter.hitUntil = now + 5000;
+      letter.returning = false;
+
+      if (!key.dragging) {
+        key.vx *= -.38;
+        key.vy *= -.38;
+      }
+    }
+  }
+}
+
+/* ДВИЖЕНИЕ И ВОЗВРАТ БУКВ */
+
+function updateLetters(dt, now) {
+  for (const letter of letterBodies) {
+    if (now >= letter.hitUntil && !letter.returning) {
+      letter.returning = true;
+    }
+
+    if (letter.returning) {
+      letter.vx += -letter.x * .045 * dt;
+      letter.vy += -letter.y * .045 * dt;
+      letter.spin += -letter.rotation * .045 * dt;
+
+      letter.vx *= Math.pow(.78, dt);
+      letter.vy *= Math.pow(.78, dt);
+      letter.spin *= Math.pow(.72, dt);
+
+      letter.x += letter.vx * dt;
+      letter.y += letter.vy * dt;
+      letter.rotation += letter.spin * dt;
+
+      if (
+        Math.abs(letter.x) < .15 &&
+        Math.abs(letter.y) < .15 &&
+        Math.abs(letter.rotation) < .15 &&
+        Math.abs(letter.vx) < .15 &&
+        Math.abs(letter.vy) < .15
+      ) {
+        letter.x = 0;
+        letter.y = 0;
+        letter.rotation = 0;
+        letter.vx = 0;
+        letter.vy = 0;
+        letter.spin = 0;
+        letter.returning = false;
+      }
+    } else {
+      letter.vx *= Math.pow(.94, dt);
+      letter.vy *= Math.pow(.94, dt);
+      letter.spin *= Math.pow(.92, dt);
+
+      letter.x += letter.vx * dt;
+      letter.y += letter.vy * dt;
+      letter.rotation += letter.spin * dt;
+    }
+
+    letter.element.style.transform =
+      `translate(${letter.x}px, ${letter.y}px) rotate(${letter.rotation}deg)`;
+  }
+}
+
+/* БЫСТРОЕ ИСЧЕЗНОВЕНИЕ КЛЮЧЕЙ */
+
+function updateKeyDisappearance(dt) {
+  const settledKeys = keys.filter(key => key.settled && !key.dragging);
+  const count = settledKeys.length;
+  const lifetime = Math.max(.45, 1.8 - count * .025);
+
+  for (const key of settledKeys) {
+    if (key.settledTime >= lifetime) {
+      key.opacity = Math.max(0, key.opacity - dt / 21);
+      key.element.style.opacity = key.opacity;
+
+      if (key.opacity <= 0) {
+        removeKey(key);
+      }
+    }
+  }
+}
+
+/* ПЕРЕТАСКИВАНИЕ */
+
+function enableDrag(key) {
+  let startX = 0;
+  let startY = 0;
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+
+  key.element.addEventListener('pointerdown', event => {
+    event.preventDefault();
+
+    key.dragging = true;
+    key.userControlled = true;
+    key.settled = false;
+    key.grounded = false;
+    key.settledTime = 0;
+    key.opacity = 1;
+
+    key.element.style.opacity = '1';
+    key.element.setPointerCapture(event.pointerId);
+
+    const rect = home.getBoundingClientRect();
+
+    startX = key.x;
+    startY = key.y;
+
+    pointerStartX = event.clientX - rect.left;
+    pointerStartY = event.clientY - rect.top;
+
+    key.previousPointerX = event.clientX;
+    key.previousPointerY = event.clientY;
+
+    key.pointerVelocityX = 0;
+    key.pointerVelocityY = 0;
+
+    key.vx = 0;
+    key.vy = 0;
+  });
+
+  key.element.addEventListener('pointermove', event => {
+    if (!key.dragging) return;
+
+    const rect = home.getBoundingClientRect();
+    const bounds = getBounds();
+
+    const px = event.clientX - rect.left;
+    const py = event.clientY - rect.top;
+
+    const dx = event.clientX - key.previousPointerX;
+    const dy = event.clientY - key.previousPointerY;
+
+    key.previousPointerX = event.clientX;
+    key.previousPointerY = event.clientY;
+
+    key.pointerVelocityX = key.pointerVelocityX * .35 + dx * .65;
+    key.pointerVelocityY = key.pointerVelocityY * .35 + dy * .65;
+
+    key.x = Math.max(0, Math.min(
+      bounds.width - 42,
+      startX + (px - pointerStartX)
+    ));
+
+    key.y = Math.max(0, Math.min(
+      bounds.height - 42,
+      startY + (py - pointerStartY)
+    ));
+
+    key.targetRotation = Math.max(-55, Math.min(55, dx * 3));
+    key.rotation += (key.targetRotation - key.rotation) * .2;
+
+    checkCatch(key);
+    resolveLetterCollisions(performance.now());
+    drawKey(key);
+  });
+
+  function release() {
+    if (!key.dragging) return;
+
+    key.dragging = false;
+
+    key.vx = key.pointerVelocityX * .9;
+    key.vy = key.pointerVelocityY * .9;
+    key.spin = key.pointerVelocityX * .35;
+    key.grounded = false;
+
+    if (!physicsActive) {
+      physicsActive = true;
+      lastFrameTime = performance.now();
+      requestAnimationFrame(updatePhysics);
+    }
+
+    if (Math.abs(key.vx) < .2 && Math.abs(key.vy) < .2) {
+      key.vy = .5;
+    }
+  }
+
+  key.element.addEventListener('pointerup', release);
+  key.element.addEventListener('pointercancel', release);
+}
+
+/* ФЕЙЕРВЕРКИ */
+
+function launchFireworks() {
+  fireworksLayer.innerHTML = '';
+
+  const colors = ['#f4cf35', '#ffffff', '#ffdc65', '#f5a623', '#ffe98a'];
+  const overlayRect = catchOverlay.getBoundingClientRect();
+
+  const bursts = [
+    { x: .2, y: .3 },
+    { x: .78, y: .28 },
+    { x: .5, y: .18 },
+    { x: .3, y: .72 },
+    { x: .75, y: .7 },
+    { x: .5, y: .48 }
+  ];
+
+  bursts.forEach((burst, burstIndex) => {
+    setTimeout(() => {
+      const centerX = overlayRect.width * burst.x;
+      const centerY = overlayRect.height * burst.y;
+
+      for (let i = 0; i < 28; i++) {
+        const particle = document.createElement('i');
+        particle.className = 'firework-particle';
+
+        const angle = (Math.PI * 2 * i) / 28;
+        const distance = 55 + Math.random() * 95;
+
+        const moveX = Math.cos(angle) * distance;
+        const moveY = Math.sin(angle) * distance;
+
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = 3 + Math.random() * 4;
+
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.setProperty('--particle-x', moveX + 'px');
+        particle.style.setProperty('--particle-y', moveY + 'px');
+        particle.style.setProperty('--particle-color', color);
+        particle.style.setProperty('--particle-size', size + 'px');
+        particle.style.setProperty(
+          '--particle-duration',
+          (1.1 + Math.random() * .6) + 's'
+        );
+
+        fireworksLayer.appendChild(particle);
+        setTimeout(() => particle.remove(), 1900);
+      }
+    }, burstIndex * 170);
+  });
+}
+
+/* ПОИМКА КЛЮЧА */
+
+function checkCatch(key) {
+  const slotRect = keySlot.getBoundingClientRect();
+  const homeRect = home.getBoundingClientRect();
+
+  const keyCenterX = homeRect.left + key.x + 21;
+  const keyCenterY = homeRect.top + key.y + 21;
+
+  const slotCenterX = slotRect.left + slotRect.width / 2;
+  const slotCenterY = slotRect.top + slotRect.height / 2;
+
+  const distance = Math.hypot(
+    keyCenterX - slotCenterX,
+    keyCenterY - slotCenterY
+  );
+
+  if (distance < 65) catchKey(key);
+}
+
+function catchKey(key) {
+  if (!key || !key.element.isConnected) return;
+
+  key.dragging = false;
+
+  const slotRect = keySlot.getBoundingClientRect();
+  const homeRect = home.getBoundingClientRect();
+
+  const targetX = slotRect.left + slotRect.width / 2 - homeRect.left - 21;
+  const targetY = slotRect.top + slotRect.height / 2 - homeRect.top - 21;
+
+  key.element.style.transition =
+    'transform .35s cubic-bezier(.2,1.4,.4,1), opacity .3s';
+
+  key.element.style.transform =
+    `translate(${targetX}px, ${targetY}px) scale(.2)`;
+  key.element.style.opacity = '0';
+
+  keySlot.classList.add('active');
+  setTimeout(() => keySlot.classList.remove('active'), 1000);
+  setTimeout(() => key.element.remove(), 400);
+
+  keys = keys.filter(k => k !== key);
+
+  catchOverlay.classList.remove('show');
+  void catchOverlay.offsetWidth;
+  catchOverlay.classList.add('show');
+
+  launchFireworks();
+}
+
+/* БЫСТРЫЕ НАЖАТИЯ */
+
+function registerTap() {
+  const now = Date.now();
+
+  tapTimes.push(now);
+  tapTimes = tapTimes.filter(time => now - time < 900);
+
+  if (tapTimes.length >= 3) {
+    tapTimes = [];
+    triggerBaraEffect();
+  }
+}
+
+function triggerBaraEffect() {
+  summonButton.classList.remove('shake');
+  void summonButton.offsetWidth;
+  summonButton.classList.add('shake');
+
+  const left = document.getElementById('baraLeft');
+  const right = document.getElementById('baraRight');
+
+  left.classList.add('show');
+  right.classList.add('show');
+
+  clearTimeout(baraTimeout);
+  baraTimeout = setTimeout(() => {
+    left.classList.remove('show');
+    right.classList.remove('show');
+  }, 2200);
+}
+
+/* ТИТРЫ */
+
+const credits = [
+  ['CEO / FOUNDER', 'notawen'],
+  ['DESIGN', 'лежал ключ'],
+  ['DEVELOPMENT', 'лежал ключ'],
+  ['ANIMATIONS', 'лежал ключ'],
+  ['CREATIVE DIRECTION', 'лежал ключ'],
+  ['SPECIAL THANKS', 'notawen']
+];
+
+function createCredits() {
+  return credits.map(item => `
+    <div class="credit-item">
+      <div class="credit-role">${item[0]}</div>
+      <div class="credit-name ${item[1] === 'notawen' ? 'highlight' : ''}">
+        ${item[1]}
+      </div>
+    </div>
+  `).join('');
+}
+
+const creditsContent = document.getElementById('creditsContent');
+const creditsClone = document.getElementById('creditsClone');
+const creditsTrack = document.getElementById('creditsTrack');
+const creditsWindow = document.getElementById('creditsWindow');
+
+creditsContent.innerHTML = createCredits();
+creditsClone.innerHTML = createCredits();
+
+let creditsOffset = 0;
+let creditsSpeed = .45;
+let creditsDragging = false;
+let dragStartY = 0;
+let dragStartOffset = 0;
+let creditsHalfHeight = 0;
+
+function measureCredits() {
+  creditsHalfHeight = creditsContent.offsetHeight;
+}
+
+function updateCredits() {
+  if (!creditsDragging && authors.classList.contains('active')) {
+    creditsOffset -= creditsSpeed;
+
+    if (creditsHalfHeight > 0) {
+      if (creditsOffset <= -creditsHalfHeight) creditsOffset += creditsHalfHeight;
+      if (creditsOffset > 0) creditsOffset -= creditsHalfHeight;
+    }
+  }
+
+  creditsTrack.style.transform = `translate3d(0, ${creditsOffset}px, 0)`;
+  requestAnimationFrame(updateCredits);
+}
+
+measureCredits();
+requestAnimationFrame(updateCredits);
+
+creditsWindow.addEventListener('pointerdown', event => {
+  creditsDragging = true;
+  creditsWindow.classList.add('dragging');
+  dragStartY = event.clientY;
+  dragStartOffset = creditsOffset;
+  creditsWindow.setPointerCapture(event.pointerId);
+});
+
+creditsWindow.addEventListener('pointermove', event => {
+  if (!creditsDragging) return;
+
+  creditsOffset = dragStartOffset + (event.clientY - dragStartY);
+
+  if (creditsHalfHeight > 0) {
+    if (creditsOffset <= -creditsHalfHeight) {
+      creditsOffset += creditsHalfHeight;
+      dragStartOffset += creditsHalfHeight;
+    }
+    if (creditsOffset > 0) {
+      creditsOffset -= creditsHalfHeight;
+      dragStartOffset -= creditsHalfHeight;
+    }
+  }
+});
+
+function stopCreditsDrag() {
+  creditsDragging = false;
+  creditsWindow.classList.remove('dragging');
+}
+
+creditsWindow.addEventListener('pointerup', stopCreditsDrag);
+creditsWindow.addEventListener('pointercancel', stopCreditsDrag);
+
+creditsWindow.addEventListener('wheel', event => {
+  event.preventDefault();
+  creditsOffset -= event.deltaY;
+
+  if (creditsHalfHeight > 0) {
+    if (creditsOffset <= -creditsHalfHeight) creditsOffset += creditsHalfHeight;
+    if (creditsOffset > 0) creditsOffset -= creditsHalfHeight;
+  }
+}, { passive: false });
+
+window.addEventListener('resize', () => {
+  measureCredits();
+  const bounds = getBounds();
+
+  for (const key of keys) {
+    key.x = Math.max(0, Math.min(bounds.width - 42, key.x));
+    key.y = Math.max(0, Math.min(bounds.height - 42, key.y));
+    drawKey(key);
+  }
+});
+</script>
+
+</body>
+</html>
