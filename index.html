@@ -39,14 +39,18 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
   border-bottom: 1px solid rgba(128,128,128,.18);
   position: relative;
   z-index: 20;
+  background: var(--bg);
 }
+
 .logo-wrap {
   display: flex;
   align-items: center;
   gap: 13px;
+  flex-shrink: 0;
 }
 .logo {
   font-size: 21px;
@@ -75,6 +79,13 @@ header {
   background: rgba(244,207,53,.12);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  min-width: 0;
+}
+
 nav {
   display: flex;
   align-items: center;
@@ -89,21 +100,84 @@ nav button {
   opacity: .6;
   transition: .2s;
   padding: 8px 0;
+  white-space: nowrap;
 }
 nav button:hover,
 nav button.active { opacity: 1; }
 
 .theme-toggle {
-  position: fixed;
-  z-index: 50;
-  top: 18px;
-  right: 18px;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
   border: 0;
   background: transparent;
+  color: var(--text);
   font-size: 20px;
   cursor: pointer;
-  padding: 5px;
+  padding: 7px;
+  border-radius: 50%;
+  transition: background .2s, transform .2s;
 }
+.theme-toggle:hover {
+  background: rgba(128,128,128,.12);
+}
+.theme-toggle:active {
+  transform: scale(.88);
+}
+
+/* ДОПОЛНИТЕЛЬНОЕ МЕНЮ */
+
+.more-wrap {
+  display: none;
+  position: relative;
+}
+.more-button {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 7px 9px;
+  border-radius: 9px;
+}
+.more-button:hover {
+  background: rgba(128,128,128,.12);
+}
+.more-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  min-width: 175px;
+  padding: 7px;
+  border: 1px solid rgba(128,128,128,.2);
+  border-radius: 13px;
+  background: var(--bg);
+  box-shadow: 0 12px 35px rgba(0,0,0,.15);
+  z-index: 100;
+}
+.more-menu.open {
+  display: flex;
+  flex-direction: column;
+}
+.more-menu button {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.more-menu button:hover,
+.more-menu button.active {
+  background: rgba(244,207,53,.18);
+  opacity: 1;
+}
+
+/* СТРАНИЦЫ */
 
 main {
   position: relative;
@@ -290,7 +364,6 @@ h1 {
   width: min(900px, 100%);
   margin: 0 auto;
 }
-
 .media-heading {
   font-size: clamp(32px, 6vw, 54px);
   font-weight: 900;
@@ -298,18 +371,13 @@ h1 {
   text-align: center;
   margin: 0 0 45px;
 }
-
-.media-section {
-  margin-bottom: 48px;
-}
-
+.media-section { margin-bottom: 48px; }
 .media-section-title {
   font-size: clamp(20px, 3vw, 27px);
   font-weight: 800;
   letter-spacing: -1px;
   margin: 0 0 17px;
 }
-
 .media-card {
   border: 1px solid rgba(128,128,128,.2);
   border-radius: 17px;
@@ -322,7 +390,6 @@ h1 {
   border-color: rgba(244,207,53,.65);
   transform: translateY(-2px);
 }
-
 .media-frame {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -336,10 +403,7 @@ h1 {
   height: 100%;
   border: 0;
 }
-
-.media-description {
-  padding: 15px 5px 3px;
-}
+.media-description { padding: 15px 5px 3px; }
 .media-name {
   font-size: 17px;
   font-weight: 800;
@@ -347,6 +411,44 @@ h1 {
 }
 .media-subtitle {
   font-size: 13px;
+  color: var(--muted);
+}
+
+/* ЛЕЖАЛ ПОЗЖЕ */
+
+#laterPage {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 20px;
+}
+#laterPage.active { display: flex; }
+.later-title {
+  font-size: clamp(38px, 8vw, 78px);
+  font-weight: 900;
+  letter-spacing: -4px;
+  margin: 0;
+}
+
+/* ПОДРОБНЕЕ */
+
+#detailsPage {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 20px;
+}
+#detailsPage.active { display: flex; }
+.details-title {
+  font-size: clamp(38px, 8vw, 78px);
+  font-weight: 900;
+  letter-spacing: -4px;
+  margin: 0 0 30px;
+}
+.telegram-line {
+  font-size: 17px;
   color: var(--muted);
 }
 
@@ -421,22 +523,46 @@ h1 {
   }
 }
 
-@media (max-width: 600px) {
-  header { padding: 0 18px; }
-  nav { gap: 12px; margin-right: 35px; }
+/* МОБИЛЬНАЯ ШАПКА */
+
+@media (max-width: 700px) {
+  header {
+    padding: 0 15px;
+    gap: 8px;
+  }
+  .logo { font-size: 18px; }
+  .logo-wrap { gap: 9px; }
+  .header-right { gap: 8px; }
+  nav { gap: 13px; }
   nav button { font-size: 11px; }
-  h1 { letter-spacing: -3px; }
-  .bara-label.left { left: 3%; }
-  .bara-label.right { right: 3%; }
+  .more-wrap { display: block; }
+  .more-menu { min-width: 165px; }
   #mediaPage { padding: 35px 18px 55px; }
   .media-heading { margin-bottom: 32px; }
   .media-section { margin-bottom: 35px; }
   .media-card { padding: 9px; border-radius: 13px; }
 }
-@media (max-width: 380px) {
-  nav { gap: 8px; }
+
+@media (max-width: 430px) {
+  header { padding: 0 11px; }
+  .key-slot { width: 32px; height: 25px; }
+  .header-right { gap: 4px; }
+  nav { gap: 10px; }
   nav button { font-size: 10px; }
-  .logo { font-size: 18px; }
+  .theme-toggle { font-size: 18px; padding: 5px; }
+  .more-button { font-size: 23px; padding: 6px; }
+  h1 { letter-spacing: -3px; }
+  .bara-label.left { left: 3%; }
+  .bara-label.right { right: 3%; }
+}
+
+/* НА УЗКИХ ЭКРАНАХ ОСТАВЛЯЕМ МЕСТО ДЛЯ ЛОГОТИПА И МЕНЮ */
+
+@media (max-width: 350px) {
+  .logo { font-size: 16px; }
+  .key-slot { display: none; }
+  nav { gap: 7px; }
+  nav button { font-size: 9px; }
 }
 </style>
 </head>
@@ -449,14 +575,26 @@ h1 {
     <div class="key-slot" id="keySlot"></div>
   </div>
 
-  <nav>
-    <button class="active" id="homeTab">Главная</button>
-    <button id="authorsTab">Авторы</button>
-    <button id="mediaTab">Медиа</button>
-  </nav>
-</header>
+  <div class="header-right">
+    <nav>
+      <button class="active" id="homeTab">Главная</button>
+      <button id="authorsTab">Авторы</button>
+      <button id="mediaTab">Медиа</button>
+      <button id="laterTab" class="extra-tab">лежал позже</button>
+      <button id="detailsTab" class="extra-tab">Подробнее</button>
+    </nav>
 
-<button class="theme-toggle" id="themeToggle">🌙</button>
+    <div class="more-wrap" id="moreWrap">
+      <button class="more-button" id="moreButton" aria-label="Дополнительные вкладки" aria-expanded="false">⋯</button>
+      <div class="more-menu" id="moreMenu">
+        <button id="mobileLaterTab">лежал позже</button>
+        <button id="mobileDetailsTab">Подробнее</button>
+      </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Сменить тему">🌙</button>
+  </div>
+</header>
 
 <main>
   <section class="page active" id="home">
@@ -483,7 +621,6 @@ h1 {
 
       <div class="media-section">
         <h3 class="media-section-title">видео</h3>
-
         <div class="media-card">
           <div class="media-frame">
             <iframe
@@ -500,27 +637,17 @@ h1 {
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="media-section">
-        <h3 class="media-section-title">музыка</h3>
+  <section class="page" id="laterPage">
+    <h2 class="later-title">лежал позже</h2>
+  </section>
 
-        <div class="media-card">
-          <div class="media-frame">
-            <iframe
-              src="https://www.youtube-nocookie.com/embed/MF_cYq4EixU"
-              title="А4 — KIDS (Official Audio)"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allowfullscreen>
-            </iframe>
-          </div>
-          <div class="media-description">
-            <div class="media-name">А4 — KIDS</div>
-            <div class="media-subtitle">Влад А4, Глент, Кобяков · Official Audio</div>
-          </div>
-        </div>
-      </div>
-
+  <section class="page" id="detailsPage">
+    <div>
+      <h2 class="details-title">подробнее.</h2>
+      <div class="telegram-line">telegram:</div>
     </div>
   </section>
 </main>
@@ -537,10 +664,19 @@ h1 {
 const home = document.getElementById('home');
 const authors = document.getElementById('authors');
 const mediaPage = document.getElementById('mediaPage');
+const laterPage = document.getElementById('laterPage');
+const detailsPage = document.getElementById('detailsPage');
 
 const homeTab = document.getElementById('homeTab');
 const authorsTab = document.getElementById('authorsTab');
 const mediaTab = document.getElementById('mediaTab');
+const laterTab = document.getElementById('laterTab');
+const detailsTab = document.getElementById('detailsTab');
+
+const mobileLaterTab = document.getElementById('mobileLaterTab');
+const mobileDetailsTab = document.getElementById('mobileDetailsTab');
+const moreButton = document.getElementById('moreButton');
+const moreMenu = document.getElementById('moreMenu');
 
 const themeToggle = document.getElementById('themeToggle');
 const summonButton = document.getElementById('summonButton');
@@ -562,9 +698,17 @@ const SPAWN_COUNT = 45;
 
 /* НАВИГАЦИЯ */
 
+const allPages = [home, authors, mediaPage, laterPage, detailsPage];
+const allTabs = [homeTab, authorsTab, mediaTab, laterTab, detailsTab];
+
+function closeMoreMenu() {
+  moreMenu.classList.remove('open');
+  moreButton.setAttribute('aria-expanded', 'false');
+}
+
 function showPage(page) {
-  [home, authors, mediaPage].forEach(p => p.classList.remove('active'));
-  [homeTab, authorsTab, mediaTab].forEach(t => t.classList.remove('active'));
+  allPages.forEach(p => p.classList.remove('active'));
+  allTabs.forEach(t => t.classList.remove('active'));
 
   if (page === 'home') {
     home.classList.add('active');
@@ -572,15 +716,45 @@ function showPage(page) {
   } else if (page === 'authors') {
     authors.classList.add('active');
     authorsTab.classList.add('active');
-  } else {
+  } else if (page === 'media') {
     mediaPage.classList.add('active');
     mediaTab.classList.add('active');
+  } else if (page === 'later') {
+    laterPage.classList.add('active');
+    laterTab.classList.add('active');
+    mobileLaterTab.classList.add('active');
+  } else if (page === 'details') {
+    detailsPage.classList.add('active');
+    detailsTab.classList.add('active');
+    mobileDetailsTab.classList.add('active');
   }
+
+  if (page !== 'later') mobileLaterTab.classList.remove('active');
+  if (page !== 'details') mobileDetailsTab.classList.remove('active');
+
+  closeMoreMenu();
 }
 
 homeTab.addEventListener('click', () => showPage('home'));
 authorsTab.addEventListener('click', () => showPage('authors'));
 mediaTab.addEventListener('click', () => showPage('media'));
+laterTab.addEventListener('click', () => showPage('later'));
+detailsTab.addEventListener('click', () => showPage('details'));
+
+mobileLaterTab.addEventListener('click', () => showPage('later'));
+mobileDetailsTab.addEventListener('click', () => showPage('details'));
+
+moreButton.addEventListener('click', event => {
+  event.stopPropagation();
+  const isOpen = moreMenu.classList.toggle('open');
+  moreButton.setAttribute('aria-expanded', String(isOpen));
+});
+
+document.addEventListener('click', event => {
+  if (!document.getElementById('moreWrap').contains(event.target)) {
+    closeMoreMenu();
+  }
+});
 
 /* ТЕМА */
 
@@ -652,8 +826,6 @@ function randomSpawnPosition(width) {
 
   return Math.max(0, Math.min(width - 42, x));
 }
-
-/* УДАЛЕНИЕ СТАРЫХ КЛЮЧЕЙ ПРИ ПЕРЕПОЛНЕНИИ */
 
 function removeKey(key) {
   if (!key) return;
